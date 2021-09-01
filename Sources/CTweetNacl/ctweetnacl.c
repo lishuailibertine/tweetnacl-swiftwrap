@@ -805,3 +805,35 @@ int crypto_sign_open(u8 *m,u64 *mlen,const u8 *sm,u64 n,const u8 *pk)
   *mlen = n;
   return 0;
 }
+int is_on_curve(const u8 *p)
+{
+  gf r[4];
+  gf t, chk, num, den, den2, den4, den6;
+  set25519(r[2],gf1);
+  unpack25519(r[1],p);
+  S(num,r[1]);
+  M(den,num,D);
+  Z(num,num,r[2]);
+  A(den,r[2],den);
+
+  S(den2,den);
+  S(den4,den2);
+  M(den6,den4,den2);
+  M(t,den6,num);
+  M(t,t,den);
+
+  pow2523(t,t);
+  M(t,t,num);
+  M(t,t,den);
+  M(t,t,den);
+  M(r[0],t,den);
+
+  S(chk,r[0]);
+  M(chk,chk,den);
+  if (neq25519(chk, num)) M(r[0],r[0],I);
+
+  S(chk,r[0]);
+  M(chk,chk,den);
+  if (neq25519(chk, num)) return 0;
+  return -1;
+}
